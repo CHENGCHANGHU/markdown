@@ -4,10 +4,26 @@ function transformInlineElement(lineText) {
   return lineText
     .replace(/<(?!(\/?(p|pre|code|div|strong|em|table|thead|tbody|th|tr|td)))/g, '&lt;')
     .replace(/(?<!(p|pre|code|div|strong|em|table|thead|tbody|th|tr|td))>/g, '&gt;')
-    .replace(/^(.*)\*\*(.+)\*\*(.*)$/g, (match, $1, $2, $3) => `${$1}<strong>${$2}</strong>${$3}`)
-    .replace(/^(.*)\*(.+)\*(.*)$/g, (match, $1, $2, $3) => `${$1}<i>${$2}</i>${$3}`)
-    .replace(/(?<!\\)`([^`]+)(?<!\\)`/g, (match, m_inline_code) => `<code>${m_inline_code}</code>`)
-    .replace(/^([^\[]*)\[(.*)\]\((.*)\)(.*)$/g, (match, $1, $2, $3, $4) => `${$1}<a href="${$3}" target="_blank">${$2}</a>${$4}`);
+    .replace(
+      /(?<!\\)\*(?<!\\)\*(.+?)(?<!\\)\*(?<!\\)\*/g,
+      (match, m_strong) => `<strong data-markdown-strong='strong'>${m_strong}</strong>`
+    )
+    .replace(
+      /(?<!\\)\*(.+?)(?<!\\)\*/g,
+      (match, m_italic) => `<i data-markdown-strong='italic'>${m_italic}</i>`
+    )
+    .replace(
+      /(?<!\\)`([^`]+?)(?<!\\)`/g,
+      (match, m_inline_code) => `<code data-markdown-inline-code='inline-code'>${m_inline_code}</code>`
+    )
+    .replace(
+      /(?<!\\)!(?<!\\)\[(.+?)(?<!\\)\](?<!\\)\((.+?)(?<!\\)\)/g,
+      (match, m_alt, m_url) => `<figure data-markdown-figure="figure"><img src="${m_url}" alt="${m_alt}"><figcaption>${m_alt}</figcaption></figure>`
+    )
+    .replace(
+      /(?<!\\)\[(.+?)(?<!\\)\](?<!\\)\((.+?)(?<!\\)\)$/g,
+      (match, m_text, m_url) => `<a href="${m_url}" target="_blank" data-markdown-link='link'>${m_text}</a>`
+    );
 }
 
 const basicStyle = {
@@ -68,7 +84,15 @@ const basicStyle = {
       padding: 0 2px;
       border-radius: 4px;
       background-color: #e1e1e1;
-    }        
+    }
+    
+    [data-markdown-li='li'] {
+      margin: 8px 0;
+    }
+
+    [data-markdown-code='code'] {
+      margin: 8px 0;
+    }
   `,
 };
 
@@ -132,8 +156,9 @@ export function transformer(mdText, option = {
           attributes: {
             classes: `code-block-index-${lineIndex}`,
             style: `--indent: ${match[1].length * 16}px`,
-            ['data-code-type']: match[2],
-            ['data-code-block-index']: lineIndex,
+            'data-markdown-code': 'code',
+            'data-code-type': match[2],
+            'data-code-block-index': lineIndex,
           },
           children: [
             {
@@ -424,6 +449,7 @@ export function transformer(mdText, option = {
         html: transformInlineElement(match[2].trim()),
         attributes: {
           style: `--indent: ${match[1].length * 16}px`,
+          'data-markdown-li': 'li',
         }
       });
       return { options, lastNodeType: 'list-item' };
