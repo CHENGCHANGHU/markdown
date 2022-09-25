@@ -1,6 +1,6 @@
 import { createElement } from '@golden-tiger/dom';
 
-function transformInlineElement(lineText) {
+export function transformInlineElement(lineText) {
   return lineText
     .replace(/<(?!(\/?(p|pre|code|div|strong|em|table|thead|tbody|th|tr|td)))/g, '&lt;')
     .replace(/(?<!(p|pre|code|div|strong|em|table|thead|tbody|th|tr|td))>/g, '&gt;')
@@ -21,7 +21,7 @@ function transformInlineElement(lineText) {
       (match, m_alt, m_url) => `<figure data-markdown-figure="figure"><img src="${m_url}" alt="${m_alt}"><figcaption>${m_alt}</figcaption></figure>`
     )
     .replace(
-      /(?<!\\)\[(.+?)(?<!\\)\](?<!\\)\((.+?)(?<!\\)\)$/g,
+      /(?<!\\)\[(.+?)(?<!\\)\](?<!\\)\((.+?)(?<!\\)\)/g,
       (match, m_text, m_url) => `<a href="${m_url}" target="_blank" data-markdown-link='link'>${m_text}</a>`
     );
 }
