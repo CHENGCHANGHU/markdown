@@ -1,7 +1,7 @@
 {
-  "name": "@golden-tiger/javascript-package-template",
-  "version": "0.0.0",
-  "description": "@golden-tiger/javascript-package-template",
+  "name": "@golden-tiger/markdown",
+  "version": "0.0.1",
+  "description": "Transform markdown to HTML",
   "main": "./lib/cjs-module.js",
   "module": "./lib/es-module.js",
   "scripts": {
@@ -12,7 +12,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/CHENGCHANGHU/javascript-package-template.git"
+    "url": "git+https://github.com/CHENGCHANGHU/markdown.git"
   },
   "publishConfig": {
     "registry": "https://registry.npmjs.org"
@@ -24,17 +24,18 @@
   ],
   "keywords": [
     "golden-tiger",
-    "javascript-package-template"
+    "markdown"
   ],
   "author": "Cheng ChangHu",
   "license": "Apache-2.0",
   "bugs": {
-    "url": "https://github.com/CHENGCHANGHU/javascript-package-template/issues"
+    "url": "https://github.com/CHENGCHANGHU/markdown/issues"
   },
-  "homepage": "https://github.com/CHENGCHANGHU/javascript-package-template#readme",
+  "homepage": "https://github.com/CHENGCHANGHU/markdown#readme",
   "devDependencies": {
     "@babel/core": "^7.18.13",
     "@babel/preset-env": "^7.18.10",
+    "@golden-tiger/dom": "^0.0.2",
     "babel-loader": "^8.2.5",
     "clean-webpack-plugin": "^4.0.0",
     "core-js": "^3.25.0",

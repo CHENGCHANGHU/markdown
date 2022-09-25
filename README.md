@@ -1,3 +1,5 @@
-# #golden-tiger/javascript-package-template
+# #golden-tiger/markdown
 
-JavaScript Package Template
+Transform markdown to HTML
+
+
