@@ -1,31 +1,5 @@
 import { createElement } from '@golden-tiger/dom';
 
-export function transformInlineElement(lineText) {
-  return lineText
-    .replace(/<(?!(\/?(p|pre|code|div|strong|em|table|thead|tbody|th|tr|td)))/g, '&lt;')
-    .replace(/(?<!(p|pre|code|div|strong|em|table|thead|tbody|th|tr|td))>/g, '&gt;')
-    .replace(
-      /(?<!\\)\*(?<!\\)\*(.+?)(?<!\\)\*(?<!\\)\*/g,
-      (match, m_strong) => `<strong data-markdown-strong='strong'>${m_strong}</strong>`
-    )
-    .replace(
-      /(?<!\\)\*(.+?)(?<!\\)\*/g,
-      (match, m_italic) => `<i data-markdown-strong='italic'>${m_italic}</i>`
-    )
-    .replace(
-      /(?<!\\)`([^`]+?)(?<!\\)`/g,
-      (match, m_inline_code) => `<code data-markdown-inline-code='inline-code'>${m_inline_code}</code>`
-    )
-    .replace(
-      /(?<!\\)!(?<!\\)\[(.+?)(?<!\\)\](?<!\\)\((.+?)(?<!\\)\)/g,
-      (match, m_alt, m_url) => `<figure data-markdown-figure="figure"><img src="${m_url}" alt="${m_alt}"><figcaption>${m_alt}</figcaption></figure>`
-    )
-    .replace(
-      /(?<!\\)\[(.+?)(?<!\\)\](?<!\\)\((.+?)(?<!\\)\)/g,
-      (match, m_text, m_url) => `<a href="${m_url}" target="_blank" data-markdown-link='link'>${m_text}</a>`
-    );
-}
-
 const basicStyle = {
   tag: 'style',
   text: `
@@ -93,8 +67,54 @@ const basicStyle = {
     [data-markdown-code='code'] {
       margin: 8px 0;
     }
+
+    [data-markdown-figure='figure'] {
+      display: flex;
+      flex-flow: column nowrap;
+      align-items: center;
+      row-gap: 8px;
+    }
+
+    [data-markdown-image='image'] {
+      width: 80%;
+      max-height: 600px;
+      object-fit: scale-down;
+    }
+
+    [data-markdown-figcaption="figcaption"] {
+      color: #666;
+    }
   `,
 };
+
+export function transformInlineElement(lineText) {
+  return lineText
+    .replace(/<(?!(\/?(p|pre|code|div|strong|em|table|thead|tbody|th|tr|td)))/g, '&lt;')
+    .replace(/(?<!(p|pre|code|div|strong|em|table|thead|tbody|th|tr|td))>/g, '&gt;')
+    .replace(
+      /(?<!\\)\*(?<!\\)\*(.+?)(?<!\\)\*(?<!\\)\*/g,
+      (match, m_strong) => `<strong data-markdown-strong='strong'>${m_strong}</strong>`
+    )
+    .replace(
+      /(?<!\\)\*(.+?)(?<!\\)\*/g,
+      (match, m_italic) => `<i data-markdown-strong='italic'>${m_italic}</i>`
+    )
+    .replace(
+      /(?<!\\)`([^`]+?)(?<!\\)`/g,
+      (match, m_inline_code) => `<code data-markdown-inline-code='inline-code'>${m_inline_code}</code>`
+    )
+    .replace(
+      /(?<!\\)!(?<!\\)\[(.+?)(?<!\\)\](?<!\\)\((.+?)(?<!\\)\)/g,
+      (match, m_alt, m_url) => `<figure data-markdown-figure="figure">
+        <img src="${m_url}" alt="${m_alt}" data-markdown-image="image">
+        <figcaption data-markdown-figcaption="figcaption">${m_alt}</figcaption>
+      </figure>`
+    )
+    .replace(
+      /(?<!\\)\[(.+?)(?<!\\)\](?<!\\)\((.+?)(?<!\\)\)/g,
+      (match, m_text, m_url) => `<a href="${m_url}" target="_blank" data-markdown-link='link'>${m_text}</a>`
+    );
+}
 
 export function transformer(mdText, option = {
   indent: 16,
