@@ -3,15 +3,18 @@ import { createElement } from '@golden-tiger/dom';
 const basicStyle = {
   tag: 'style',
   text: `
-    [data-markdown-heading='h1'] {
+    [data-md-heading='h1'] {
+      margin: 8px 0;
       padding: 32px 0 16px 0;
     }
 
-    [data-markdown-heading='h2'] {
+    [data-md-heading='h2'] {
+      margin: 8px 0;
       padding: 16px 0 8px 0;
     }
 
-    [data-markdown-heading='h2'] {
+    [data-md-heading='h3'] {
+      margin: 8px 0;
       padding: 8px 0 8px 0;
     }
     
@@ -19,7 +22,7 @@ const basicStyle = {
       margin: 8px 0 8px 0;
     }
 
-    [data-markdown-block-quotes='block-quotes'] {
+    [data-md-block-quotes='block-quotes'] {
       margin-left: var(--indent);
       margin-top: 8px;
       margin-bottom: 8px;
@@ -60,11 +63,11 @@ const basicStyle = {
       background-color: #e1e1e1;
     }
     
-    [data-markdown-li='li'] {
+    [data-md-unordered-list-item='list-item'] {
       margin: 8px 0;
     }
 
-    [data-markdown-code='code'] {
+    [data-markdown-code-block='code-block'] {
       margin: 8px 0;
     }
 
@@ -83,6 +86,11 @@ const basicStyle = {
 
     [data-markdown-figcaption="figcaption"] {
       color: #666;
+    }
+
+    [data-md-ordered-list='ordered-list'] {
+      margin-left: var(--indent);
+      margin: 8px 0;
     }
   `,
 };
@@ -116,14 +124,7 @@ export function transformInlineElement(lineText) {
     );
 }
 
-export function transformer(mdText, option = {
-  indent: 16,
-}) {
-  // console.log(mdText);
-  let lastLineType = '';
-  let lastElementOption = '';
-  const elementOptions = [];
-
+function getLines(mdText) {
   const markdownLines = [];
   let row = 0;
   let pos = 0;
@@ -162,6 +163,18 @@ export function transformer(mdText, option = {
     pos++;
   }
   markdownLines.push(lineText);
+  return markdownLines;
+}
+
+export function transformer(
+  mdText,
+  {
+    indent = 16,
+  } = {
+    indent: 16,
+  }
+) {
+  const markdownLines = getLines(mdText);
 
   const htmlNodeOptions = markdownLines.reduce(({options, lastNodeType, status}, lineText, lineIndex) => {
     let match = null;
@@ -176,9 +189,9 @@ export function transformer(mdText, option = {
           attributes: {
             classes: `code-block-index-${lineIndex}`,
             style: `--indent: ${match[1].length * 16}px`,
-            'data-markdown-code': 'code',
-            'data-code-type': match[2],
-            'data-code-block-index': lineIndex,
+            'data-markdown-code-block': 'code-block',
+            'data-markdown-code-block-type': match[2],
+            'data-markdown-code-block-index': lineIndex,
           },
           children: [
             {
@@ -186,15 +199,15 @@ export function transformer(mdText, option = {
               text: '',
               attributes: {
                 classes: `code-block-index-${lineIndex}-line-box`,
-              }
+              },
             },
             {
               tag: 'pre',
               text: '',
               attributes: {
                 classes: `code-block-index-${lineIndex}-code-box`,
-              }
-            }
+              },
+            },
           ],
         });
         return { options, lastNodeType: 'code-block-start', status: { skipNextLine: true } };
@@ -207,7 +220,7 @@ export function transformer(mdText, option = {
     if (match = lineText.match(/^(\s*)```(\s*)$/)) {
       if (lastNodeType === 'code-block-start') {
         const lastNodeOption = options.at(-1);
-        const codeBlockIndex = lastNodeOption.attributes['data-code-block-index'];
+        const codeBlockIndex = lastNodeOption.attributes['data-markdown-code-block-index'];
         lastNodeOption.children.push({
           tag: 'style',
           text: `
@@ -255,7 +268,7 @@ export function transformer(mdText, option = {
       if (status && status.skipNextLine) {
         return { options, lastNodeType: 'code-block-start' };
       }
-      const { attributes: { ['data-code-block-index']: codeIndex }, children: [lineBox, codeBox] } = options.at(-1);
+      const { attributes: { ['data-markdown-code-block-index']: codeIndex }, children: [lineBox, codeBox] } = options.at(-1);
       if (lineText !== '\n') {
         lineBox.text += `${(lineIndex - codeIndex - 2) / 2}:\n`;
       }
@@ -288,7 +301,7 @@ export function transformer(mdText, option = {
         tag: `h${match[1].length}`,
         html: transformInlineElement(match[2].trim()),
         attributes: {
-          'data-markdown-heading': `h${match[1].length}`,
+          'data-md-heading': `h${match[1].length}`,
         },
       });
       return {
@@ -313,7 +326,7 @@ export function transformer(mdText, option = {
           attributes: {
             style: `--indent: ${match[1].length * 16}px`,
             'data-indent': match[1].length,
-            'data-markdown-block-quotes': 'block-quotes',
+            'data-md-block-quotes': 'block-quotes',
           },
         });
       }
@@ -461,7 +474,7 @@ export function transformer(mdText, option = {
     }
 
     /**
-     * list-item
+     * unordered-list-item
      */
     if (match = lineText.match(/^(\s*)\- (.*)$/)) {
       options.push({
@@ -469,10 +482,31 @@ export function transformer(mdText, option = {
         html: transformInlineElement(match[2].trim()),
         attributes: {
           style: `--indent: ${match[1].length * 16}px`,
-          'data-markdown-li': 'li',
+          'data-md-unordered-list-item': 'list-item',
         }
       });
       return { options, lastNodeType: 'list-item' };
+    }
+
+    /**
+     * ordered-list-item
+     */
+    if (match = lineText.match(/^(\s*)([1-9]\d*)\. (.*)$/)) {
+      const [m_space, m_start_serial_number, m_text] = match;
+      options.push({
+        tag: 'ol',
+        attributes: {
+          style: `--indent: ${m_space.length * indent}px`,
+          start: m_start_serial_number,
+          'data-md-ordered-list': 'ordered-list',
+        },
+        children: [
+          {
+            tag: 'li',
+            html: transformInlineElement(m_text.trim()),
+          },
+        ],
+      });
     }
 
     /**
@@ -485,7 +519,7 @@ export function transformer(mdText, option = {
         html: transformInlineElement(match[2].trim()),
         attributes: {
           style: `--indent: ${match[1].length * 16}px`,
-        }
+        },
       });
       return { options, lastNodeType: 'paragraph' };
     }
