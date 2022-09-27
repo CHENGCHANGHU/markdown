@@ -3,36 +3,33 @@ import { createElement } from '@golden-tiger/dom';
 const basicStyle = {
   tag: 'style',
   text: `
+    [data-md] {
+      line-height: 1.5;
+    }
+
     [data-md-heading='h1'] {
-      margin: 8px 0;
       padding: 32px 0 16px 0;
     }
 
     [data-md-heading='h2'] {
-      margin: 8px 0;
-      padding: 16px 0 8px 0;
+      padding: 24px 0 8px 0;
     }
 
     [data-md-heading='h3'] {
-      margin: 8px 0;
-      padding: 8px 0 8px 0;
-    }
-    
-    p {
-      margin: 8px 0 8px 0;
+      padding: 16px 0 0 0;
     }
 
     [data-md-block-quotes='block-quotes'] {
       margin-left: var(--indent);
       margin-top: 8px;
       margin-bottom: 8px;
-      padding: 4px 16px;
-      border-left: 8px solid #ccc;
-      background-color: #efefef;
+      padding: 4px 8px;
+      border-left: 4px solid #ddd;
+      background-color: #eee;
     }
     
     table, th,
-    [data-markdown-td='td'] {
+    [data-md-table-data-cell='td'] {
       border: 1px solid #343434;
     }
     
@@ -55,41 +52,78 @@ const basicStyle = {
       color: seagreen;
     }
 
-    code {
-      display: inline-block;
-      border: 1px solid #d1d1d1;
+    [data-md-inline-code='inline-code'] {
+      border: 1px solid #ccc;
       padding: 0 2px;
       border-radius: 4px;
-      background-color: #e1e1e1;
+      background-color: #e3e3e3;
     }
     
     [data-md-unordered-list-item='list-item'] {
       margin: 8px 0;
     }
 
-    [data-markdown-code-block='code-block'] {
+    [data-md-code-block='code-block'] {
+      display: flex;
+      flex-flow: row nowrap;
+      column-gap: 4px;
       margin: 8px 0;
+      padding: 8px 16px;
+      border-radius: 4px;
+      background-color: #eee;
+      box-sizing: border-box;
+      max-height: 400px;
+      overflow-y: auto;
     }
 
-    [data-markdown-figure='figure'] {
+    [data-md-code-block-line-box='code-block-line-box'],
+    [data-md-code-block-code-box='code-block-code-box'] {
+      padding: 4px 0;
+      height: 100%;
+      color: #ccc;
+      font-family: monospace;
+      white-space: pre;
+    }
+
+    [data-md-code-block-line-box='code-block-line-box'] {
+      color: #343434;
+      text-align: right;
+    }
+
+    [data-md-code-block-code-box='code-block-code-box'] {
+      flex: 1;
+      padding-left: 4px;
+      border-radius: 4px;
+      background-color: #222;
+    }
+
+    [data-md-figure='figure'] {
       display: flex;
       flex-flow: column nowrap;
       align-items: center;
       row-gap: 8px;
     }
 
-    [data-markdown-image='image'] {
+    [data-md-image='image'] {
       width: 80%;
       max-height: 600px;
       object-fit: scale-down;
     }
 
-    [data-markdown-figcaption="figcaption"] {
+    [data-md-figcaption="figcaption"] {
       color: #666;
     }
 
     [data-md-ordered-list='ordered-list'] {
+      margin: 8px 0;
       margin-left: var(--indent);
+    }
+
+    [data-md-ordered-list-item='ordered-list-item'] {
+      list-style-position: inside;
+    }
+
+    [data-md-paragraph='paragraph'] {
       margin: 8px 0;
     }
   `,
@@ -101,26 +135,26 @@ export function transformInlineElement(lineText) {
     .replace(/(?<!(p|pre|code|div|strong|em|table|thead|tbody|th|tr|td))>/g, '&gt;')
     .replace(
       /(?<!\\)\*(?<!\\)\*(.+?)(?<!\\)\*(?<!\\)\*/g,
-      (match, m_strong) => `<strong data-markdown-strong='strong'>${m_strong}</strong>`
+      (match, m_strong) => `<strong data-md-strong='strong'>${m_strong}</strong>`
     )
     .replace(
       /(?<!\\)\*(.+?)(?<!\\)\*/g,
-      (match, m_italic) => `<i data-markdown-strong='italic'>${m_italic}</i>`
+      (match, m_italic) => `<i data-md-italic='italic'>${m_italic}</i>`
     )
     .replace(
       /(?<!\\)`([^`]+?)(?<!\\)`/g,
-      (match, m_inline_code) => `<code data-markdown-inline-code='inline-code'>${m_inline_code}</code>`
+      (match, m_inline_code) => `<code data-md-inline-code='inline-code'>${m_inline_code}</code>`
     )
     .replace(
       /(?<!\\)!(?<!\\)\[(.+?)(?<!\\)\](?<!\\)\((.+?)(?<!\\)\)/g,
-      (match, m_alt, m_url) => `<figure data-markdown-figure="figure">
-        <img src="${m_url}" alt="${m_alt}" data-markdown-image="image">
-        <figcaption data-markdown-figcaption="figcaption">${m_alt}</figcaption>
+      (match, m_alt, m_url) => `<figure data-md-figure="figure">
+        <img src="${m_url}" alt="${m_alt}" data-md-image="image">
+        <figcaption data-md-figcaption="figcaption">${m_alt}</figcaption>
       </figure>`
     )
     .replace(
       /(?<!\\)\[(.+?)(?<!\\)\](?<!\\)\((.+?)(?<!\\)\)/g,
-      (match, m_text, m_url) => `<a href="${m_url}" target="_blank" data-markdown-link='link'>${m_text}</a>`
+      (match, m_text, m_url) => `<a href="${m_url}" target="_blank" data-md-link='link'>${m_text}</a>`
     );
 }
 
@@ -183,15 +217,17 @@ export function transformer(
      * code-block-start
      */
     if (match = lineText.match(/^(\s*)```([^`]*)$/)) {
+      const [m_whole, m_space, m_language] = match;
       if (lastNodeType !== 'code-block-start') {
         options.push({
           tag: 'div',
           attributes: {
             classes: `code-block-index-${lineIndex}`,
-            style: `--indent: ${match[1].length * 16}px`,
-            'data-markdown-code-block': 'code-block',
-            'data-markdown-code-block-type': match[2],
-            'data-markdown-code-block-index': lineIndex,
+            style: `--indent: ${m_space.length * 16}px`,
+            'data-md': '',
+            'data-md-code-block': 'code-block',
+            'data-md-code-block-type': m_language,
+            'data-md-code-block-index': lineIndex,
           },
           children: [
             {
@@ -199,6 +235,8 @@ export function transformer(
               text: '',
               attributes: {
                 classes: `code-block-index-${lineIndex}-line-box`,
+                'data-md': '',
+                'data-md-code-block-line-box': 'code-block-line-box',
               },
             },
             {
@@ -206,6 +244,8 @@ export function transformer(
               text: '',
               attributes: {
                 classes: `code-block-index-${lineIndex}-code-box`,
+                'data-md': '',
+                'data-md-code-block-code-box': 'code-block-code-box',
               },
             },
           ],
@@ -219,44 +259,6 @@ export function transformer(
      */
     if (match = lineText.match(/^(\s*)```(\s*)$/)) {
       if (lastNodeType === 'code-block-start') {
-        const lastNodeOption = options.at(-1);
-        const codeBlockIndex = lastNodeOption.attributes['data-markdown-code-block-index'];
-        lastNodeOption.children.push({
-          tag: 'style',
-          text: `
-            .code-block-index-${codeBlockIndex} {
-              display: flex;
-              flex-flow: row nowrap;
-              column-gap: 4px;
-              padding: 8px 16px;
-              border-radius: 4px;
-              background-color: #aaa;
-              box-sizing: border-box;
-              max-height: 400px;
-              overflow-y: auto;
-            }
-            .code-block-index-${codeBlockIndex}-line-box,
-            .code-block-index-${codeBlockIndex}-code-box {
-              color: #ccc;
-              font-family: monospace;
-              white-space: pre;
-              line-height: 14px;
-              padding: 4px 0;
-              line-height: 1.2;
-            }
-            .code-block-index-${codeBlockIndex}-line-box {
-              color: #343434;
-              text-align: right;
-            }
-            .code-block-index-${codeBlockIndex}-code-box {
-              flex: 1;
-              height: 100%;
-              padding-left: 4px;
-              border-radius: 4px;
-              background-color: #222;
-            }
-          `,
-        });
         return { options, lastNodeType: 'code-block-end' };
       }
     }
@@ -268,7 +270,7 @@ export function transformer(
       if (status && status.skipNextLine) {
         return { options, lastNodeType: 'code-block-start' };
       }
-      const { attributes: { ['data-markdown-code-block-index']: codeIndex }, children: [lineBox, codeBox] } = options.at(-1);
+      const { attributes: { ['data-md-code-block-index']: codeIndex }, children: [lineBox, codeBox] } = options.at(-1);
       if (lineText !== '\n') {
         lineBox.text += `${(lineIndex - codeIndex - 2) / 2}:\n`;
       }
@@ -284,7 +286,7 @@ export function transformer(
         tag: 'div',
         text: '',
         attributes: {
-          ['data-markdown-split-line']: 'split-line',
+          'data-md-split-line': 'split-line',
         }
       });
       return {
@@ -297,11 +299,13 @@ export function transformer(
      * heading
      */
     if (match = lineText.match(/^(#+) (.+?)$/)) {
+      const [m_whole, m_sharp, m_text] = match;
       options.push({
         tag: `h${match[1].length}`,
-        html: transformInlineElement(match[2].trim()),
+        html: transformInlineElement(m_text.trim()),
         attributes: {
-          'data-md-heading': `h${match[1].length}`,
+          'data-md': '',
+          'data-md-heading': `h${m_sharp.length}`,
         },
       });
       return {
@@ -325,6 +329,7 @@ export function transformer(
           html: transformInlineElement(match[3].trim()),
           attributes: {
             style: `--indent: ${match[1].length * 16}px`,
+            'data-md': '',
             'data-indent': match[1].length,
             'data-md-block-quotes': 'block-quotes',
           },
@@ -371,7 +376,8 @@ export function transformer(
             tag: 'td',
             html: transformInlineElement(text.trim()),
             attributes: {
-              'data-markdown-td': 'td',
+              'data-md': '',
+              'data-md-table-data-cell': 'td',
               ...span,
             },
           };
@@ -405,7 +411,8 @@ export function transformer(
           tag: 'table',
           attributes: {
             classes: `table-index-${lineIndex}`,
-            'data-markdown-table-index': lineIndex,
+            'data-md': '',
+            'data-md-table-index': lineIndex,
           },
           children: [
             {
@@ -428,16 +435,16 @@ export function transformer(
             .map((alignText, index) => {
               if (/^:\-+:$/.test(alignText)) {
                 // return `.${lastNodeOption.attributes.classes} td[data-col-index="${index}"] { text-align: center; }`;
-                return `[data-markdown-table-index='${
-                  lastNodeOption.attributes['data-markdown-table-index']
+                return `[data-md-table-index='${
+                  lastNodeOption.attributes['data-md-table-index']
                 }'] td[data-col-index='${
                   index
                 }'] { text-align: center; }`;
               }
               if (/^\-+:$/.test(alignText)) {
                 // return `.${lastNodeOption.attributes.classes} td[data-col-index="${index}"] { text-align: right; }`;
-                return `[data-markdown-table-index='${
-                  lastNodeOption.attributes['data-markdown-table-index']
+                return `[data-md-table-index='${
+                  lastNodeOption.attributes['data-md-table-index']
                 }'] td[data-col-index='${
                   index
                 }'] { text-align: right; }`;
@@ -469,6 +476,10 @@ export function transformer(
     if (match = lineText.match(/^[\*\-_]{3,}$/)) {
       options.push({
         tag: 'hr',
+        attributes: {
+          'data-md': '',
+          'data-md-horizontal-rule': 'horizontal-rule',
+        },
       });
       return { options, lastNodeType: 'horizontal-rule' };
     }
@@ -482,6 +493,7 @@ export function transformer(
         html: transformInlineElement(match[2].trim()),
         attributes: {
           style: `--indent: ${match[1].length * 16}px`,
+          'data-md': '',
           'data-md-unordered-list-item': 'list-item',
         }
       });
@@ -491,22 +503,28 @@ export function transformer(
     /**
      * ordered-list-item
      */
-    if (match = lineText.match(/^(\s*)([1-9]\d*)\. (.*)$/)) {
-      const [m_space, m_start_serial_number, m_text] = match;
+     if (match = lineText.match(/^(\s*)([1-9]\d*)\. (.*)$/)) {
+      const [m_whole, m_space, m_start_serial_number, m_text] = match;
       options.push({
         tag: 'ol',
         attributes: {
           style: `--indent: ${m_space.length * indent}px`,
           start: m_start_serial_number,
+          'data-md': '',
           'data-md-ordered-list': 'ordered-list',
         },
         children: [
           {
             tag: 'li',
             html: transformInlineElement(m_text.trim()),
+            attributes: {
+              'data-md': '',
+              'data-md-ordered-list-item': 'ordered-list-item',
+            },
           },
         ],
       });
+      return { options, lastNodeType: 'ordered-list' };
     }
 
     /**
@@ -519,6 +537,8 @@ export function transformer(
         html: transformInlineElement(match[2].trim()),
         attributes: {
           style: `--indent: ${match[1].length * 16}px`,
+          'data-md': '',
+          'data-md-paragraph': 'paragraph',
         },
       });
       return { options, lastNodeType: 'paragraph' };
@@ -540,9 +560,13 @@ export function transformer(
      * \n
      */
     return { options, lastNodeType };
-  }, { options: [
-    basicStyle,
-  ], lastNodeType: '', status: {}}).options;
+  }, {
+    options: [
+      basicStyle,
+    ],
+    lastNodeType: '',
+    status: {},
+  }).options;
 
   console.log(htmlNodeOptions);
 
