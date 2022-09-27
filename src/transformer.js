@@ -158,14 +158,14 @@ export function transformInlineElement(lineText) {
     );
 }
 
-function getLines(mdText) {
+function getLinesChar(mdText) {
   const markdownLines = [];
   let row = 0;
   let pos = 0;
   let lineText = '';
   let skipNextFlag = false;
 
-  mdText.replace(/\\r\\n/g, '\n');
+  mdText = mdText.replaceAll(/\r\n/g, '\n').replaceAll(/\r/g, '\n');
 
   // windows: \r\n, linux: \n, mac: \r
   for (let char of mdText) {
@@ -197,6 +197,19 @@ function getLines(mdText) {
     pos++;
   }
   markdownLines.push(lineText);
+  return markdownLines;
+}
+
+function getLines(mdText) {
+  let markdownLines = mdText
+    .replaceAll(/\r\n/g, '\n')
+    .replaceAll(/\r/g, '\n')
+    .split(/\n/)
+    .reduce((lines, curr) => {
+        lines.push(curr, '\n');
+        return lines;
+      }, []);
+  markdownLines.pop();
   return markdownLines;
 }
 
