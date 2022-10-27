@@ -61,6 +61,7 @@ const basicStyle = {
     
     [data-md-unordered-list-item='list-item'] {
       margin: 8px 0;
+      margin-left: var(--indent);
     }
 
     [data-md-code-block='code-block'] {
