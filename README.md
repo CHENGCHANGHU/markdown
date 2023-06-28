@@ -18,5 +18,6 @@ Use <code>|(=n)...|</code> to create a n row span table cell <code>&lt;td rowspa
 |j|
 |k|
 ```
+![markdown-example](./markdown-example.png)
 
 
