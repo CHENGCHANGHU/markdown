@@ -21,14 +21,17 @@ function getWebpackConfig (commandParams) {
       minimize: JSON.parse(process.env.minimize),
     },
     entry: {
-      index: path.join(__dirname, 'src', 'index.js'),
+      index: path.join(__dirname, 'src', 'index.ts'),
+    },
+    resolve: {
+      extensions: [".ts", ".js"],
     },
     output: {
       path: path.resolve(__dirname, 'dist'),
       filename: 'index.js',
       globalObject: 'typeof self === \'undefined\' ? this : self',
       library: {
-        name: 'Difference',
+        name: 'Tree',
         type: 'umd',
       },
     },
@@ -38,6 +41,11 @@ function getWebpackConfig (commandParams) {
           test: /\.js$/,
           loader: 'babel-loader',
           exclude: path.join(__dirname, '..', 'node_modules')
+        },
+        {
+          test: /\.ts$/,
+          loader: 'ts-loader',
+          exclude: [/node_modules/],
         },
       ],
     },

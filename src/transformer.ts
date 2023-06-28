@@ -130,7 +130,7 @@ const basicStyle = {
   `,
 };
 
-export function transformInlineElement(lineText) {
+export function transformInlineElement(lineText: string) {
   return lineText
     .replace(/<(?!(\/?(p|pre|code|div|strong|em|table|thead|tbody|th|tr|td)))/g, '&lt;')
     .replace(/(?<!(p|pre|code|div|strong|em|table|thead|tbody|th|tr|td))>/g, '&gt;')
@@ -159,7 +159,7 @@ export function transformInlineElement(lineText) {
     );
 }
 
-function getLinesChar(mdText) {
+function getLinesChar(mdText: string) {
   const markdownLines = [];
   let row = 0;
   let pos = 0;
@@ -201,7 +201,7 @@ function getLinesChar(mdText) {
   return markdownLines;
 }
 
-function getLines(mdText) {
+function getLines(mdText: string) {
   let markdownLines = mdText
     .replaceAll(/\r\n/g, '\n')
     .replaceAll(/\r/g, '\n')
@@ -214,10 +214,19 @@ function getLines(mdText) {
   return markdownLines;
 }
 
+/**
+ * Transform markdown text to html element.
+ * @param mdText 
+ * @param options
+ * options.indent: default indent px.
+ * @returns 
+ */
 export function transformer(
-  mdText,
+  mdText: string,
   {
     indent = 16,
+  }: {
+    indent: number
   } = {
     indent: 16,
   }
@@ -366,8 +375,8 @@ export function transformer(
       const tdOptions = lineText
         .slice(1, lineText.length - 1)
         .split('|')
-        .map((text, index) => {
-          const span = {
+        .map((text: string, index: number) => {
+          const span: any = {
             'data-row-index': tableRowIndex,
             'data-col-index': index,
             rowspan: 1,
@@ -397,30 +406,30 @@ export function transformer(
           };
         });
       
-      tdOptions.reduce((prev, curr) => {
+      tdOptions.reduce((prev: any, curr: any) => {
         curr.attributes['data-col-index'] = prev;
         return prev + curr.attributes['data-col-span'];
       }, 0);
       
       if (lastNodeOption && lastNodeOption.tableRowShadow) {
         lastNodeOption.tableRowShadow = lastNodeOption.tableRowShadow
-          .filter(shadow => tableRowIndex < (shadow.rowIndex + shadow.rowSpan));
-        lastNodeOption.tableRowShadow.forEach(shadow => {
-          tdOptions.filter(td => td.attributes['data-col-index'] >= shadow.colIndex)
-            .forEach(td => td.attributes['data-col-index'] += shadow.colSpan);
+          .filter((shadow: any) => tableRowIndex < (shadow.rowIndex + shadow.rowSpan));
+        lastNodeOption.tableRowShadow.forEach((shadow: any) => {
+          tdOptions.filter((td: any) => td.attributes['data-col-index'] >= shadow.colIndex)
+            .forEach((td: any) => td.attributes['data-col-index'] += shadow.colSpan);
         });
       }
 
       if (lastNodeType !== 'tablerow') { // create table
         const tableRowShadow = tdOptions
-          .filter(td => td.attributes['data-row-span'] > 1)
+          .filter((td: any) => td.attributes['data-row-span'] > 1)
           .map(({ attributes: {
             ['data-row-index']: rowIndex,
             ['data-col-index']: colIndex,
             ['data-row-span']: rowSpan,
             ['data-col-span']: colSpan,
-          } }) => ({ rowIndex, colIndex, rowSpan, colSpan }));
-        const tableHeadRow = Math.max(tableRowShadow.reduce((prev, curr) => Math.max(prev, curr.rowSpan), 0), 1);
+          } }: any) => ({ rowIndex, colIndex, rowSpan, colSpan }));
+        const tableHeadRow = Math.max(tableRowShadow.reduce((prev: any, curr: any) => Math.max(prev, curr.rowSpan), 0), 1);
         options.push({
           tag: 'table',
           attributes: {
@@ -446,7 +455,7 @@ export function transformer(
           const styleText = lineText
             .slice(1, lineText.length - 1)
             .split('|')
-            .map((alignText, index) => {
+            .map((alignText: string, index: number) => {
               if (/^:\-+:$/.test(alignText)) {
                 // return `.${lastNodeOption.attributes.classes} td[data-col-index="${index}"] { text-align: center; }`;
                 return `[data-md-table-index='${
@@ -470,13 +479,13 @@ export function transformer(
           return { options, lastNodeType: 'tablerow' };
         } else { // push new table row
           lastNodeOption.tableRowShadow.push(...tdOptions
-            .filter(td => td.attributes['data-row-span'] > 1)
+            .filter((td: any) => td.attributes['data-row-span'] > 1)
             .map(({ attributes: {
               ['data-row-index']: rowIndex,
               ['data-col-index']: colIndex,
               ['data-row-span']: rowSpan,
               ['data-col-span']: colSpan,
-            } }) => ({ rowIndex, colIndex, rowSpan, colSpan })));
+            } }: any) => ({ rowIndex, colIndex, rowSpan, colSpan })));
 
           lastNodeOption.children[0].children.push({ tag: 'tr', children: tdOptions });
           return { options, lastNodeType: 'tablerow' };
@@ -581,8 +590,6 @@ export function transformer(
     lastNodeType: '',
     status: {},
   }).options;
-
-  console.log(htmlNodeOptions);
 
   return htmlNodeOptions.map(createElement);
 };
