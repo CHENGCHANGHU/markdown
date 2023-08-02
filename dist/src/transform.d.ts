@@ -7,7 +7,8 @@ export interface TransformOptions {
  * Transform markdown text to html element.
  * @param mdText
  * @param options
- * options.indent: default indent px.
+ * options.indent: indent px, default 16.
+ * options.output: 'options' | 'dom', default 'dom'.
  * @returns
  */
 export declare function transform(mdText: string, transformOptions: TransformOptions): any;
