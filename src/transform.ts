@@ -1,6 +1,6 @@
 import { createElement } from '@golden-tiger/dom';
 
-const basicStyle = {
+const BasicMarkdownStyle = {
   tag: 'style',
   text: `
     [data-md] {
@@ -214,6 +214,16 @@ function getLines(mdText: string) {
   return markdownLines;
 }
 
+const DefaultTransformOptions: TransformOptions = {
+  indent: 16,
+  output: 'dom'
+};
+
+export interface TransformOptions {
+  output?: 'options' | 'dom';
+  indent?: number;
+}
+
 /**
  * Transform markdown text to html element.
  * @param mdText 
@@ -221,16 +231,14 @@ function getLines(mdText: string) {
  * options.indent: default indent px.
  * @returns 
  */
-export function transformer(
+export function transform(
   mdText: string,
-  {
-    indent = 16,
-  }: {
-    indent: number
-  } = {
-    indent: 16,
-  }
+  transformOptions: TransformOptions,
 ) {
+  const { output, indent } = {
+    ...DefaultTransformOptions,
+    ...transformOptions,
+  };
   const markdownLines = getLines(mdText);
 
   const htmlNodeOptions = markdownLines.reduce(({options, lastNodeType, status}, lineText, lineIndex) => {
@@ -585,11 +593,13 @@ export function transformer(
     return { options, lastNodeType };
   }, {
     options: [
-      basicStyle,
+      BasicMarkdownStyle,
     ],
     lastNodeType: '',
     status: {},
   }).options;
+
+  if (output === 'options') return htmlNodeOptions;
 
   return htmlNodeOptions.map(createElement);
 };

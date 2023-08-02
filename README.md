@@ -2,6 +2,13 @@
 
 Transform markdown text to html element.
 
+## Usage
+
+```js
+import { transform } from '@golden-tiger/markdown'; // mjs
+const { transform } = require('@golden-tiger/markdown'); // cjs
+```
+
 - The basic syntax is same as normal markdown, such as <code>#</code> indicates a header, <code>></code> indicates a quota, and so on.
 
 - Basic tables are made by separating each cell with the pipe <code>|</code> symbol, and can be enhanced further with additional options to create advanced table layouts. This online markdown editor supports <strong>rowspan and colspan</strong> markdown table.

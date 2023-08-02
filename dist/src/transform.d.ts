@@ -1,4 +1,8 @@
 export declare function transformInlineElement(lineText: string): string;
+export interface TransformOptions {
+    output?: 'options' | 'dom';
+    indent?: number;
+}
 /**
  * Transform markdown text to html element.
  * @param mdText
@@ -6,6 +10,4 @@ export declare function transformInlineElement(lineText: string): string;
  * options.indent: default indent px.
  * @returns
  */
-export declare function transformer(mdText: string, { indent, }?: {
-    indent: number;
-}): any;
+export declare function transform(mdText: string, transformOptions: TransformOptions): any;
