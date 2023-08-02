@@ -234,7 +234,7 @@ export interface TransformOptions {
  */
 export function transform(
   mdText: string,
-  transformOptions: TransformOptions,
+  transformOptions?: TransformOptions,
 ) {
   const { output, indent } = {
     ...DefaultTransformOptions,

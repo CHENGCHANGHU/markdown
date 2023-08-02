@@ -11,4 +11,4 @@ export interface TransformOptions {
  * options.output: 'options' | 'dom', default 'dom'.
  * @returns
  */
-export declare function transform(mdText: string, transformOptions: TransformOptions): any;
+export declare function transform(mdText: string, transformOptions?: TransformOptions): any;
