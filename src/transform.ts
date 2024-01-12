@@ -306,7 +306,9 @@ export function transform(
       if (lineText !== '\n') {
         lineBox.text += `${(lineIndex - codeIndex - 2) / 2}:\n`;
       }
-      codeBox.text += lineText;
+      codeBox.text += lineText
+        .replace(/<(?!(\/?(p|pre|code|div|strong|em|table|thead|tbody|th|tr|td)))/g, '&lt;')
+        .replace(/(?<!(p|pre|code|div|strong|em|table|thead|tbody|th|tr|td))>/g, '&gt;');
       return { options, lastNodeType: 'code-block-start' };
     }
 
