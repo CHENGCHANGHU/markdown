@@ -132,8 +132,8 @@ const BasicMarkdownStyle = {
 
 export function transformInlineElement(lineText: string) {
   return lineText
-    .replace(/<(?!(\/?(p|pre|code|div|strong|em|table|thead|tbody|th|tr|td)))/g, '&lt;')
-    .replace(/(?<!(p|pre|code|div|strong|em|table|thead|tbody|th|tr|td))>/g, '&gt;')
+    .replace(/<(?!(\/?(p|pre|code|div|strong|em|table|thead|tbody|th|tr|td)>))/g, '&lt;')
+    .replace(/(?<!<(p|pre|code|div|strong|em|table|thead|tbody|th|tr|td))>/g, '&gt;')
     .replace(
       /(?<!\\)\*(?<!\\)\*(.+?)(?<!\\)\*(?<!\\)\*/g,
       (match, m_strong) => `<strong data-md-strong='strong'>${m_strong}</strong>`
