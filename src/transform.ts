@@ -130,10 +130,17 @@ const BasicMarkdownStyle = {
   `,
 };
 
+function transformAngleBrackets(text: string): string {
+  return text
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
+
 function transformNonInlineCodeText(text: string): string {
   return text
     .replace(/<(?!(\/?(p|pre|code|div|strong|em|table|thead|tbody|th|tr|td)>))/g, '&lt;')
-    .replace(/(?<!<(p|pre|code|div|strong|em|table|thead|tbody|th|tr|td))>/g, '&gt;').replace(
+    .replace(/(?<!<(p|pre|code|div|strong|em|table|thead|tbody|th|tr|td))>/g, '&gt;')
+    .replace(
       /(?<!\\)\*(?<!\\)\*(.+?)(?<!\\)\*(?<!\\)\*/g,
       (match, m_strong) => `<strong data-md-strong='strong'>${m_strong}</strong>`
     )
@@ -166,7 +173,7 @@ export function transformInlineElement(lineText: string) {
       if ((index & 1) === 0) {
         acc += transformNonInlineCodeText(curr);
       } else {
-        acc += `<code data-md-inline-code='inline-code'>${curr}</code>`;
+        acc += `<code data-md-inline-code='inline-code'>${transformAngleBrackets(curr)}</code>`;
       }
       return acc;
     }, '');
@@ -332,9 +339,7 @@ export function transform(
       if (lineText !== '\n') {
         lineBox.text += `${(lineIndex - codeIndex - 2) / 2}:\n`;
       }
-      codeBox.text += lineText
-        .replace(/<(?!(\/?(p|pre|code|div|strong|em|table|thead|tbody|th|tr|td)))/g, '&lt;')
-        .replace(/(?<!(p|pre|code|div|strong|em|table|thead|tbody|th|tr|td))>/g, '&gt;');
+      codeBox.text += transformAngleBrackets(lineText);
       return { options, lastNodeType: 'code-block-start' };
     }
 
