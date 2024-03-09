@@ -52,6 +52,10 @@ writeFileSync(
 );
 
 const tagText = 'v' + newVersionText;
+spawnSync('which', ['git'], { stdio: 'inherit' });
+spawnSync('git', ['config', '--global', 'user.email', '"1669675499@qq.com"'], { stdio: 'inherit' });
+spawnSync('git', ['config', '--global', 'user.name', '"Changehu Cheng"'], { stdio: 'inherit' });
+spawnSync('git', ['config', '--global', '-l'], { stdio: 'inherit' });
 spawnSync('git', ['add', '.'], { stdio: 'inherit' });
 spawnSync('git', ['commit', '-m', tagText], { stdio: 'inherit' });
 spawnSync('git', ['tag', '-a', tagText, '-m', `"${tagText}"`], { stdio: 'inherit' });

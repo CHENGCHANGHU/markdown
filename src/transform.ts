@@ -130,21 +130,16 @@ const BasicMarkdownStyle = {
   `,
 };
 
-export function transformInlineElement(lineText: string) {
-  return lineText
+function transformNonInlineCodeText(text: string): string {
+  return text
     .replace(/<(?!(\/?(p|pre|code|div|strong|em|table|thead|tbody|th|tr|td)>))/g, '&lt;')
-    .replace(/(?<!<(p|pre|code|div|strong|em|table|thead|tbody|th|tr|td))>/g, '&gt;')
-    .replace(
+    .replace(/(?<!<(p|pre|code|div|strong|em|table|thead|tbody|th|tr|td))>/g, '&gt;').replace(
       /(?<!\\)\*(?<!\\)\*(.+?)(?<!\\)\*(?<!\\)\*/g,
       (match, m_strong) => `<strong data-md-strong='strong'>${m_strong}</strong>`
     )
     .replace(
       /(?<!\\)\*(.+?)(?<!\\)\*/g,
       (match, m_italic) => `<i data-md-italic='italic'>${m_italic}</i>`
-    )
-    .replace(
-      /(?<!\\)`([^`]+?)(?<!\\)`/g,
-      (match, m_inline_code) => `<code data-md-inline-code='inline-code'>${m_inline_code}</code>`
     )
     .replace(
       /(?<!\\)!(?<!\\)\[(.+?)(?<!\\)\](?<!\\)\((.+?)(?<!\\)\)/g,
@@ -157,6 +152,37 @@ export function transformInlineElement(lineText: string) {
       /(?<!\\)\[(.+?)(?<!\\)\](?<!\\)\((.+?)(?<!\\)\)/g,
       (match, m_text, m_url) => `<a href="${m_url}" target="_blank" data-md-link='link'>${m_text}</a>`
     );
+}
+
+export function transformInlineElement(lineText: string) {
+  const results = lineText.split('`');
+  const { length } = results;
+  if (length < 3) {
+    return transformNonInlineCodeText(lineText);
+  }
+
+  if ((length & 1) === 1) {
+    return results.reduce((acc, curr, index) => {
+      if ((index & 1) === 0) {
+        acc += transformNonInlineCodeText(curr);
+      } else {
+        acc += `<code data-md-inline-code='inline-code'>${curr}</code>`;
+      }
+      return acc;
+    }, '');
+  }
+  
+  return results.slice(0, -2).reduce((acc, curr, index) => {
+    if ((index & 1) === 0) {
+      acc += transformNonInlineCodeText(curr);
+    } else {
+      acc += `<code data-md-inline-code='inline-code'>${curr}</code>`;
+    }
+    return acc;
+  }, '')
+    + transformNonInlineCodeText(results[length - 2])
+    + '`'
+    + transformNonInlineCodeText(results[length - 1]);
 }
 
 function getLinesChar(mdText: string) {
