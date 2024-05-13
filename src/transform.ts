@@ -138,8 +138,8 @@ function transformAngleBrackets(text: string): string {
 
 function transformNonInlineCodeText(text: string): string {
   return text
-    .replace(/<(?!(\/?(p|pre|code|div|strong|em|table|thead|tbody|th|tr|td)>))/g, '&lt;')
-    .replace(/(?<!<(p|pre|code|div|strong|em|table|thead|tbody|th|tr|td))>/g, '&gt;')
+    .replace(/<(?!(\/?(p|pre|code|div|strong|em|table|thead|tbody|th|tr|td)[^>]*?>))/g, '&lt;')
+    .replace(/(?<!(<\/?(p|pre|code|div|strong|em|table|thead|tbody|th|tr|td)[^>]*?))>/g, '&gt;')
     .replace(
       /(?<!\\)\*(?<!\\)\*(.+?)(?<!\\)\*(?<!\\)\*/g,
       (match, m_strong) => `<strong data-md-strong='strong'>${m_strong}</strong>`
@@ -169,17 +169,17 @@ export function transformInlineElement(lineText: string) {
   }
 
   if ((length & 1) === 1) {
-    return results.reduce((acc, curr, index) => {
+    return transformNonInlineCodeText(results.reduce((acc, curr, index) => {
       if ((index & 1) === 0) {
         acc += transformNonInlineCodeText(curr);
       } else {
         acc += `<code data-md-inline-code='inline-code'>${transformAngleBrackets(curr)}</code>`;
       }
       return acc;
-    }, '');
+    }, ''));
   }
   
-  return results.slice(0, -2).reduce((acc, curr, index) => {
+  return transformNonInlineCodeText(results.slice(0, -2).reduce((acc, curr, index) => {
     if ((index & 1) === 0) {
       acc += transformNonInlineCodeText(curr);
     } else {
@@ -189,7 +189,7 @@ export function transformInlineElement(lineText: string) {
   }, '')
     + transformNonInlineCodeText(results[length - 2])
     + '`'
-    + transformNonInlineCodeText(results[length - 1]);
+    + transformNonInlineCodeText(results[length - 1]));
 }
 
 function getLinesChar(mdText: string) {
